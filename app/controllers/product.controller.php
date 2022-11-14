@@ -51,29 +51,33 @@ class productController{
     }
 
     function array_sort($array){
-        $orderby="ID";
+        
         $order= SORT_ASC;
         if(isset($_GET['orderby'])){
-            if(($_GET['orderby']=="nombre")||($_GET['orderby']=="precio")||($_GET['orderby']=="ID")||($_GET['orderby']=="descripcion")||($_GET['orderby']=="marca")($_GET['orderby']=="id_categoria"))
-            $orderby= $_GET['orderby'];
-        }
-        
-        if(isset($_GET['asc'])&empty($_GET['asc'])){
-
-        }
-        if(isset($_GET['desc'])&empty($_GET['desc']))
-            $order= SORT_DESC;
-          
-        $aux=array();
-        if($orderby!="ID"){
-            
-            foreach($array as $k=>$v){
-                $aux[$k]=strtolower($v->$orderby);
+            if(($_GET['orderby']=="nombre")||($_GET['orderby']=="precio")||($_GET['orderby']=="ID")||($_GET['orderby']=="descripcion")||
+                ($_GET['orderby']=="marca")||($_GET['orderby']=="id_categoria"))
+                {
+                    $orderby= $_GET['orderby'];
+                    if(isset($_GET['desc'])&empty($_GET['desc']))
+                        $order= SORT_DESC;
+                    $aux=array();
+                    if($orderby!="ID"){
+                        foreach($array as $k=>$v){
+                            $aux[$k]=strtolower($v->$orderby);
+                        }
+                        array_multisort($aux,$order,$array);
+                    }
+                    return $array;
+                }
+            else{
+                return null;
             }
-            array_multisort($aux,$order,$array);
+                
         }
+        else 
+            return $array;
         
-        return $array;
+       
     }
     
     function array_filter($array){
@@ -121,14 +125,12 @@ class productController{
         if(isset($_GET['page'])){
             $page=$_GET['page'];
         }
-        else
-            $page=0;
         return $page;
     }
 
     function getPagination(){
         $pagination=null;
-        if((isset($_GET['pagelimit']))&&(!empty($_GET['pagelimit'])))
+        if((isset($_GET['pagelimit'])))
             $pagination=$_GET['pagelimit'];
         return $pagination;
     }
@@ -137,12 +139,22 @@ class productController{
         $products = $this->model->getAll();
         $page = $this->getPage();
         $pagination = $this->getPagination();
-        $products=$this->array_sort($products);
-        if($page>=0&&$pagination>=0){
-            $products=$this->paginate_array($products,$page,$pagination);
-            $products=$this->array_filter($products);
-            $code=200;
+        if((is_numeric($page)&&is_numeric($pagination))||($page==null&&$pagination==null)){
+            $products=$this->array_sort($products);
+            if($products==null){
+                
+                $code=400;
+                return $this->view->response($products,$code);
+                
+                
+            }
+            if($page>=0&&$pagination>=0){
+                $products=$this->paginate_array($products,$page,$pagination);
+                $products=$this->array_filter($products);
+                $code=200;
+            }
         }
+        
         else{
             $code=400;
             return $this->view->response(null,$code);

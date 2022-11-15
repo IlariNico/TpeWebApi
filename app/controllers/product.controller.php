@@ -22,18 +22,35 @@ class productController{
         return json_decode($this->data);
     }
 
+  
     function modProd($params = null){
-        $id= $params[':ID'];
-        $product=$this->getData();
-        $code=200;
-        if($this->verify($product)){
-            $code=400;
-            return $this->view->response("Complete los datos", $code);
+        $id=-1;
+        if(count($params)==1)
+            $id=$params[':ID'];
+        if(is_numeric($id)&&$id>0){
+            $product=$this->getData();
+            $productdb=$this->model->get($id);
+            $code=200;
+            if($productdb!=false){
+                if($this->verify($product)){
+                    $code=400;
+                    return $this->view->response("Complete los datos", $code);
+                }
+            
+                else{
+                    $this->model->modify($product,$id);
+                    $product = $this->model->get($id);
+                    $this->view->response($product, $code);
+                }
+            }
+            else{
+                $code=404;
+                return $this->view->response("Id incorrecto", $code);
+            }
         }
         else{
-            $this->model->modify($product,$id);
-            $product = $this->model->get($id);
-            $this->view->response($product, $code);
+            $code=400;
+            return $this->view->response("peticion incorrecta", $code);
         }
     }
 
@@ -144,7 +161,7 @@ class productController{
             if($products==null){
                 
                 $code=400;
-                return $this->view->response($products,$code);
+                return $this->view->response("peticion incorrecta",$code);
                 
                 
             }
@@ -154,10 +171,9 @@ class productController{
                 $code=200;
             }
         }
-        
         else{
             $code=400;
-            return $this->view->response(null,$code);
+            return $this->view->response("peticion incorrecta",$code);
         }
         if(($products==null)){
             $code=404;
@@ -166,26 +182,43 @@ class productController{
     }
 
     function getProduct($params = null) {
-        $id= $params[':ID'];
-        $product = $this->model->get($id);
-        $code=200;
-        if($product==null){
-            $code=404;
-        }
         
-        return $this->view->response($product,$code);
+        
+        $id=$params[':ID'];
+        if(is_numeric($id)){
+            $product = $this->model->get($id);
+            $code=200;
+            if($product==null){
+                $code=404;
+                return $this->view->response("id incorrecto",$code);
+            }
+            return $this->view->response($product,$code);
+        }
+        else{
+            $code=400;
+            return $this->view->response("peticion incorrecta",$code);
+        }
+
     }
 
     function delProduct($params = null){
-        $id=$params[':ID'];
-        $product=$this->model->get($id);
-        $code=200;
-        if($product==null){
-            $code=404;
+        $id=-1;
+        if(count($params)==1)
+            $id=$params[':ID'];
+        if(is_numeric($id)&&$id>0){
+            $product=$this->model->get($id);
+            $code=200;
+            if($product==null){
+                $code=404;
+                return $this->view->response("id incorrecto",$code);
+            }
+            $this->model->delete($id);
             return $this->view->response($product,$code);
         }
-        $this->model->delete($id);
-        return $this->view->response($product,$code);
+        else{
+            $code=400;
+            return $this->view->response("peticion incorrecta",$code);
+        }
     }
 
 }
